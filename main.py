@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:12345678@localhost/product_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@localhost/cartorders'
 
 db = SQLAlchemy(app)
 
@@ -13,12 +13,12 @@ class Cart(db.Model):
     quantity = db.Column(db.Integer, nullable=False)
     userId = db.Column(db.Integer, nullable=False)
     deleteStatus = db.Column(db.Boolean, default=False)
-    status= db.Column(db.String(20), default='inCart')
+    status= db.Column(db.String(20), default='InCart')
     createdAt = db.Column(db.DateTime, default=db.func.current_timestamp())
     updatedAt = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
     deleteAt= db.Column(db.DateTime, nullable=True)
 
-class Order(db.Model):
+class Orders(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     cartId = db.Column(db.Integer, nullable=False)
     userId = db.Column(db.Integer, nullable=False)
@@ -132,7 +132,7 @@ def create_order():
     if not cartId or not userId:
         return jsonify({'error': 'Missing required fields'}), 400
 
-    new_order = Order(cartId=cartId, userId=userId)
+    new_order = Orders(cartId=cartId, userId=userId)
     db.session.add(new_order)
     db.session.commit()
 
@@ -140,7 +140,7 @@ def create_order():
 
 @app.route('/orderPayment/<int:id>', methods=['PUT'])
 def payment_status(id):
-    order = Order.query.get(id)
+    order = Orders.query.get(id)
     if not order:
         return jsonify({'error': 'Order not found'}), 404
     
@@ -151,7 +151,7 @@ def payment_status(id):
 
 @app.route('/orderDelivery/<int:id>',methods=['PUT'])
 def deliver_status(id):
-    order = Order.query.get(id)
+    order = Orders.query.get(id)
     if not order:
         return jsonify({'error': 'Order not found'}), 404
     
@@ -162,7 +162,7 @@ def deliver_status(id):
 
 @app.route('/getorderbyuser/<int:userId>', methods=['GET'])
 def get_order(userId):
-    orders = Order.query.filter_by(userId=userId).all()
+    orders = Orders.query.filter_by(userId=userId).all()
     order_list = []
     for order in orders:
         order_data = {
